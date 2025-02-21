@@ -16,19 +16,35 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+app.get("/", (req, res) => {
+  res.send("🚀 API is running!");
+});
 app.use("/api", helloMiddleware, testRoutes);
 app.all("*", notFound);
 
 // Database connection
-try {
-  await mongoose.connect(process.env.MONGO_URI!);
-  console.log("Database connection OK");
-} catch (err) {
-  console.error(err);
-  process.exit(1);
-}
+const connectDB = async () => {
+  try {
+    if (!process.env.MONGO_URI) {
+      throw new Error("❌ MONGO_URI is not defined in .env file");
+    }
 
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("✅ Database connection OK");
+  } catch (err) {
+    console.error("❌ Database connection failed:", err);
+    process.exit(1);
+  }
+};
+
+// Start Server
+const startServer = async () => {
+  await connectDB();
 // Server Listening
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}! 🚀`);
-});
+  app.listen(PORT, () => {
+    console.log(`🚀 Server listening on port ${PORT}!`);
+  });
+};
+
+startServer();
+
