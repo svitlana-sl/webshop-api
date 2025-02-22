@@ -33,3 +33,13 @@ export const registerUser = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+// Fetch all users (admin only)
+export const getUsers = async (req: Request, res: Response) => {
+  try {
+    // Retrieve users, excluding their passwords
+    const users = await User.find().select("-password");
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
