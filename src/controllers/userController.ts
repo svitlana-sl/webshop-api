@@ -3,12 +3,18 @@ import { User } from "../models/User";
 import { Error as MongooseError } from "mongoose";
 import bcrypt from "bcrypt";
 const { ValidationError } = MongooseError;
+
 // Register a new user
 export const registerUser = async (req: Request, res: Response) => {
   try {
     const { firstName, lastName, email, password, phone, role } = req.body;
 
-    // Check if the email is already in use
+    // Validate required fields
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    // Check if the email is already registered
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "Email is already registered" });
@@ -30,9 +36,11 @@ export const registerUser = async (req: Request, res: Response) => {
     await newUser.save();
     res.status(201).json({ message: "User registered successfully", userId: newUser._id });
   } catch (error) {
+    console.error("Error in registerUser:", error);
     res.status(500).json({ message: "Server error", error });
   }
 };
+
 // Fetch all users (admin only)
 export const getUsers = async (req: Request, res: Response) => {
   try {
@@ -40,6 +48,7 @@ export const getUsers = async (req: Request, res: Response) => {
     const users = await User.find().select("-password");
     res.status(200).json(users);
   } catch (error) {
+    console.error("Error in getUsers:", error);
     res.status(500).json({ message: "Server error", error });
   }
 };
@@ -48,6 +57,11 @@ export const getUsers = async (req: Request, res: Response) => {
 export const deleteUser = async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;
+
+    // Validate if userId is a valid MongoDB ObjectId
+    if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid user ID format" });
+    }
 
     // Check if user exists
     const user = await User.findById(userId);
@@ -63,3 +77,4 @@ export const deleteUser = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+
