@@ -1,17 +1,17 @@
-import express from "express";
-import {
-  getHelloWorld,
-  getTodos,
-  addTodo,
-  updateTodo,
-} from "../controllers/exampleController";
+// import express from "express";
+// import {
+//   getHelloWorld,
+//   getTodos,
+//   addTodo,
+//   updateTodo,
+// } from "../controllers/userController";
 
-const router = express.Router();
+// const router = express.Router();
 
-router
-  .get("/test", getHelloWorld)
-  .get("/todos", getTodos)
-  .post("/todos", addTodo)
-  .patch("/todos/:id", updateTodo);
+// router
+//   .get("/test", getHelloWorld)
+//   .get("/todos", getTodos)
+//   .post("/todos", addTodo)
+//   .patch("/todos/:id", updateTodo);
 
-export default router;
+// export default router;
