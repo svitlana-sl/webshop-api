@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
@@ -30,5 +30,13 @@ export const isAuthenticated = (req: Request, res: Response, next: NextFunction)
     next();
   } catch (error) {
     res.status(403).json({ message: "Invalid token." });
+  }
+};
+
+export const isAdmin: RequestHandler = (req, res, next) => {
+  if (req.user && req.user.role === "admin") {
+    next();
+  } else {
+    res.status(403).json({ message: "Forbidden: Admins only" });
   }
 };
