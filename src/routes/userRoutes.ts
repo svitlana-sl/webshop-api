@@ -1,26 +1,20 @@
 import express from "express";
 import { registerUser, loginUser, getUsers, deleteUser } from "../controllers/userController";
+import { isAuthenticated , isAdmin } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
 // Route for user registration
-router.post("/register", (req, res) => {
-  registerUser(req, res).catch((err) => console.error(err));
-});
+router.post("/register", registerUser);
 
 // Route for user login
-router.post("/login", (req, res) => {
-  loginUser(req, res).catch((err) => console.error(err));
-});
+router.post("/login", loginUser);
 
-// Route to fetch all users
-router.get("/", (req, res) => {
-  getUsers(req, res).catch((err) => console.error(err));
-});
+// Route to fetch all users (Requires authentication)
+router.get("/", isAuthenticated, isAdmin, getUsers);
 
-// Route to delete a user by ID
-router.delete("/:id", (req, res) => {
-  deleteUser(req, res).catch((err) => console.error(err));
-});
+// Route to delete a user by ID (Requires authentication)
+router.delete("/:id", isAuthenticated, isAdmin, deleteUser);
 
 export default router;
+
