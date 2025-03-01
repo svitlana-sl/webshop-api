@@ -6,6 +6,8 @@ import { notFound } from "./controllers/notFoundController";
 // import testRoutes from "./routes/exampleRoutes";
 import { helloMiddleware } from "./middleware/exampleMiddleware";
 import mongoose from "mongoose";
+import userRoutes from "./routes/userRoutes";
+
 
 // Variables
 const app = express();
@@ -14,6 +16,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use("/api/users", userRoutes);
 
 // Routes
 app.get("/", (req, res) => {
