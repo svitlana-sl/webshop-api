@@ -1,16 +1,26 @@
 import express from "express";
 import { registerUser, loginUser, getUsers, deleteUser } from "../controllers/userController";
-import { RequestHandler } from "express"; // Import the RequestHandler type from Express
+
 const router = express.Router();
 
 // Route for user registration
-router.post("/register", registerUser as RequestHandler);
+router.post("/register", (req, res) => {
+  registerUser(req, res).catch((err) => console.error(err));
+});
+
 // Route for user login
-router.post("/login", loginUser as RequestHandler);
+router.post("/login", (req, res) => {
+  loginUser(req, res).catch((err) => console.error(err));
+});
+
+// Route to fetch all users
+router.get("/", (req, res) => {
+  getUsers(req, res).catch((err) => console.error(err));
+});
+
+// Route to delete a user by ID
+router.delete("/:id", (req, res) => {
+  deleteUser(req, res).catch((err) => console.error(err));
+});
+
 export default router;
-
-// Route to fetch all users (admin only in the future)
-router.get("/", getUsers as RequestHandler);
-
-// Route to delete a user by ID (admin only in the future)
-router.delete("/:id", deleteUser as RequestHandler);
