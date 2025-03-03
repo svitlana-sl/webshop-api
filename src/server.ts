@@ -3,6 +3,8 @@ import "dotenv/config";
 import cors from "cors";
 import express from "express";
 import mongoose from "mongoose";
+import productRoutes from "./routes/productRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
 import userRoutes from "./routes/userRoutes";
 import { notFound } from "./controllers/notFoundController";
 import { Request, Response } from "express";
@@ -43,17 +45,19 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: ["./src/routes/*.ts"], 
+  apis: ["./src/routes/*.ts"],
 };
 
-const swaggerSpec = swaggerJsdoc(swaggerOptions); 
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
 // Middleware
 app.use(cors());
 app.use(express.json());
-// Swagger 
+// Swagger
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); //serve swagger UI
 
 // Routes
+app.use("/api/products", productRoutes);
+app.use("/api/categories", categoryRoutes);
 app.use("/api/users", userRoutes);
 app.get("/", (req: Request, res: Response) => {
   res.send("🚀 API is running!");
