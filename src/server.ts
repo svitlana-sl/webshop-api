@@ -6,14 +6,52 @@ import mongoose from "mongoose";
 import userRoutes from "./routes/userRoutes";
 import { notFound } from "./controllers/notFoundController";
 import { Request, Response } from "express";
+import swaggerUi from "swagger-ui-express";
+import swaggerJsdoc from "swagger-jsdoc";
 // Variables
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 
+// Swagger Configuration
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Webshop API",
+      version: "1.0.0",
+      description: "API documentation for the Webshop project",
+    },
+    servers: [
+      {
+        url: "http://localhost:3000",
+        description: "Local development server",
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+  },
+  apis: ["./src/routes/*.ts"], 
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions); 
 // Middleware
 app.use(cors());
 app.use(express.json());
+// Swagger 
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); //serve swagger UI
 
 // Routes
 app.use("/api/users", userRoutes);
