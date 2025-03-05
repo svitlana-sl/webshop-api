@@ -5,6 +5,7 @@ import express from "express";
 import mongoose from "mongoose";
 import productRoutes from "./routes/productRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
+import cartRoutes from "./routes/cartRoutes.js";
 import userRoutes from "./routes/userRoutes";
 import { notFound } from "./controllers/notFoundController";
 import { Request, Response } from "express";
@@ -58,6 +59,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); //serve swa
 // Routes
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/cart", cartRoutes);
 app.use("/api/users", userRoutes);
 app.get("/", (req: Request, res: Response) => {
   res.send("🚀 API is running!");
