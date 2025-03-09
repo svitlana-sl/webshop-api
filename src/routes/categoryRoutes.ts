@@ -2,6 +2,8 @@ import express from "express";
 import {
   getCategories,
   createCategory,
+  getSubcategories,
+  createSubcategory,
 } from "../controllers/categoryController.js";
 import { isAuthenticated, isAdmin } from "../middleware/authMiddleware.js";
 
@@ -20,9 +22,6 @@ const router = express.Router();
  *   get:
  *     summary: Get all categories
  *     tags: [Categories]
- *     responses:
- *       200:
- *         description: Returns a list of categories
  */
 router.get("/", getCategories);
 
@@ -34,30 +33,27 @@ router.get("/", getCategories);
  *     tags: [Categories]
  *     security:
  *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *             properties:
- *               name:
- *                 type: string
- *                 example: "Men's Fashion"
- *               description:
- *                 type: string
- *                 example: "Clothing and accessories for men"
- *               image:
- *                 type: string
- *                 example: "https://example.com/images/mens-fashion.jpg"
- *     responses:
- *       201:
- *         description: Category created successfully
- *       400:
- *         description: Invalid input
  */
 router.post("/", isAuthenticated, isAdmin, createCategory);
+
+/**
+ * @swagger
+ * /api/subcategories:
+ *   get:
+ *     summary: Get all subcategories
+ *     tags: [Categories]
+ */
+router.get("/subcategories", getSubcategories);
+
+/**
+ * @swagger
+ * /api/subcategories:
+ *   post:
+ *     summary: Create a new subcategory (Admin only)
+ *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post("/subcategories", isAuthenticated, isAdmin, createSubcategory);
 
 export default router;

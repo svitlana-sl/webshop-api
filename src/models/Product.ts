@@ -1,5 +1,11 @@
 import mongoose from "mongoose";
 
+const VariantSchema = new mongoose.Schema({
+  _id: { type: mongoose.Schema.Types.ObjectId, auto: true }, // unique id for each variant
+  size: { type: String, required: true },
+  color: { type: String, required: true },
+});
+
 const ProductSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -9,15 +15,10 @@ const ProductSchema = new mongoose.Schema(
       ref: "Category",
       required: true,
     },
+    subcategory: { type: mongoose.Schema.Types.ObjectId, ref: "Subcategory" }, // subcategory added to the product
     price: { type: Number, required: true },
-    stock: { type: Number, default: 0 },
     images: [{ type: String }],
-    variants: [
-      {
-        size: { type: String },
-        color: { type: String },
-      },
-    ],
+    variants: [VariantSchema], // array of variants (each has _id, size, color)
     ratings: { type: Number, default: 0 },
   },
   { timestamps: true }

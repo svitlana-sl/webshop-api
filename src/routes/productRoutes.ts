@@ -20,11 +20,32 @@ const router = express.Router();
  * @swagger
  * /api/products:
  *   get:
- *     summary: Get all products
+ *     summary: Get all products with filters
  *     tags: [Products]
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Filter products by category
+ *       - in: query
+ *         name: subcategory
+ *         schema:
+ *           type: string
+ *         description: Filter products by subcategory
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: string
+ *         description: Filter products by size
+ *       - in: query
+ *         name: color
+ *         schema:
+ *           type: string
+ *         description: Filter products by color
  *     responses:
  *       200:
- *         description: Returns a list of all products
+ *         description: List of products
  */
 router.get("/", getProducts);
 
@@ -40,10 +61,9 @@ router.get("/", getProducts);
  *         required: true
  *         schema:
  *           type: string
- *         example: 660d6e7b88a3f2a1f0a56e5d
  *     responses:
  *       200:
- *         description: Returns the product with the specified ID
+ *         description: Product found
  *       404:
  *         description: Product not found
  */
@@ -57,58 +77,6 @@ router.get("/:id", getProductById);
  *     tags: [Products]
  *     security:
  *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - category
- *               - price
- *               - stock
- *             properties:
- *               name:
- *                 type: string
- *                 example: "Men's Classic Blue Jeans"
- *               description:
- *                 type: string
- *                 example: "Stylish and comfortable classic fit jeans for men, made from high-quality denim."
- *               category:
- *                 type: string
- *                 example: "660d6e7b88a3f2a1f0a56e5d"
- *               price:
- *                 type: number
- *                 example: 59.99
- *               stock:
- *                 type: number
- *                 example: 50
- *               images:
- *                 type: array
- *                 items:
- *                   type: string
- *                 example: ["https://example.com/images/mens-jeans-front.jpg"]
- *               variants:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     size:
- *                       type: string
- *                     color:
- *                       type: string
- *                 example: [{ "size": "M", "color": "Blue" }]
- *               ratings:
- *                 type: number
- *                 example: 4.5
- *     responses:
- *       201:
- *         description: Product created successfully
- *       400:
- *         description: Invalid input
- *       403:
- *         description: Forbidden, requires admin role
  */
 router.post("/", isAuthenticated, isAdmin, createProduct);
 
@@ -120,20 +88,6 @@ router.post("/", isAuthenticated, isAdmin, createProduct);
  *     tags: [Products]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         example: 660d6e7b88a3f2a1f0a56e5d
- *     responses:
- *       200:
- *         description: Product deleted successfully
- *       403:
- *         description: Forbidden, requires admin role
- *       404:
- *         description: Product not found
  */
 router.delete("/:id", isAuthenticated, isAdmin, deleteProduct);
 
