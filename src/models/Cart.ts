@@ -5,9 +5,10 @@ const CartSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: false,
-    }, // Guest cart without userId
-    products: [
+      required: false, // Guest cart without userId
+    },
+    items: [
+      // renamed products -> items
       {
         product: {
           type: mongoose.Schema.Types.ObjectId,
@@ -15,27 +16,27 @@ const CartSchema = new mongoose.Schema(
           required: true,
         },
         variantId: { type: mongoose.Schema.Types.ObjectId, required: true },
-        quantity: { type: Number, required: true, min: 1 },
+        quantity: { type: Number, default: 1 },
       },
     ],
-    totalPrice: { type: Number, default: 0 }, // total price
+    total: { type: Number, default: 0 }, // renamed 'products' -> 'items', 'total' added
   },
   { timestamps: true }
 );
 
-// before saving the cart, calculate `totalPrice`
+// Calculate total price before saving the cart
 CartSchema.pre("save", async function (next) {
   const cart = this;
-  let total = 0;
+  let calculatedTotal = 0;
 
-  for (const item of cart.products) {
+  for (const item of cart.items) {
     const product = await mongoose.model("Product").findById(item.product);
     if (product) {
-      total += product.price * item.quantity;
+      calculatedTotal += product.price * item.quantity;
     }
   }
 
-  cart.totalPrice = total;
+  cart.total = calculatedTotal;
   next();
 });
 
