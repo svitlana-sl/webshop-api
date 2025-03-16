@@ -24,10 +24,10 @@ export const createOrder = async (
     }
 
     const orderItems = cart.items.map((item) => ({
-      product: item.product._id,
+      productId: item.product._id,
       variantId: item.variantId,
       quantity: item.quantity,
-      price: item.product.price, // Fix price at order time
+      price: item.product.price,
     }));
 
     const order = new Order({
@@ -42,7 +42,18 @@ export const createOrder = async (
     // Clear cart after order creation
     await Cart.deleteOne({ user: userId });
 
-    res.status(201).json({ message: "Order created successfully", order });
+    // send formatted response
+    res.status(201).json({
+      message: "Order created successfully",
+      order: {
+        _id: order._id,
+        totalAmount: order.totalAmount,
+        status: order.status,
+        shippingAddress: order.shippingAddress,
+        createdAt: order.createdAt,
+        items: orderItems,
+      },
+    });
   } catch (error) {
     console.error("Error creating order:", error);
     res.status(500).json({ message: "Error creating order", error });
@@ -61,8 +72,38 @@ export const getUserOrders = async (
       return;
     }
 
-    const orders = await Order.find({ user: userId }).populate("items.product");
-    res.json(orders);
+    const orders = await Order.find({ user: userId })
+      .populate({
+        path: "items.product",
+        select: "name images variants",
+      })
+      .lean();
+
+    const formattedOrders = orders.map((order) => ({
+      _id: order._id,
+      totalAmount: order.totalAmount,
+      status: order.status,
+      shippingAddress: order.shippingAddress,
+      createdAt: order.createdAt,
+      items: order.items.map((item) => {
+        const selectedVariant = item.product.variants.find(
+          (variant) => variant._id.toString() === item.variantId.toString()
+        );
+
+        return {
+          productId: item.product._id,
+          name: item.product.name,
+          image: item.product.images[0], // show only first image
+          variant: selectedVariant
+            ? { size: selectedVariant.size, color: selectedVariant.color }
+            : null,
+          quantity: item.quantity,
+          price: item.price,
+        };
+      }),
+    }));
+
+    res.json(formattedOrders);
   } catch (error) {
     console.error("Error fetching orders:", error);
     res.status(500).json({ message: "Error fetching orders", error });
@@ -75,7 +116,7 @@ export const getOrderById = async (
   res: Response
 ): Promise<void> => {
   try {
-    const orderId = req.params.id;
+    const orderId = req.params.orderId;
     const userId = req.user?.userId;
 
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
@@ -83,15 +124,50 @@ export const getOrderById = async (
       return;
     }
 
-    const order = await Order.findOne({ _id: orderId, user: userId }).populate(
-      "items.product"
-    );
+    const order = await Order.findById(orderId)
+      .populate({
+        path: "items.product",
+        select: "name images variants",
+      })
+      .lean();
+
     if (!order) {
       res.status(404).json({ message: "Order not found" });
       return;
     }
 
-    res.json(order);
+    if (order.user.toString() !== userId) {
+      res
+        .status(403)
+        .json({ message: "Access denied. You can only view your own orders." });
+      return;
+    }
+
+    const formattedOrder = {
+      _id: order._id,
+      totalAmount: order.totalAmount,
+      status: order.status,
+      shippingAddress: order.shippingAddress,
+      createdAt: order.createdAt,
+      items: order.items.map((item) => {
+        const selectedVariant = item.product.variants.find(
+          (variant) => variant._id.toString() === item.variantId.toString()
+        );
+
+        return {
+          productId: item.product._id,
+          name: item.product.name,
+          image: item.product.images[0],
+          variant: selectedVariant
+            ? { size: selectedVariant.size, color: selectedVariant.color }
+            : null,
+          quantity: item.quantity,
+          price: item.price,
+        };
+      }),
+    };
+
+    res.json(formattedOrder);
   } catch (error) {
     console.error("Error fetching order by ID:", error);
     res.status(500).json({ message: "Error fetching order", error });
@@ -133,7 +209,15 @@ export const updateOrderStatus = async (
     order.status = status;
     await order.save();
 
-    res.json({ message: "Order status updated successfully", order });
+    res.json({
+      message: "Order status updated successfully",
+      order: {
+        _id: order._id,
+        totalAmount: order.totalAmount,
+        status: order.status,
+        updatedAt: order.updatedAt,
+      },
+    });
   } catch (error) {
     console.error("Error updating order status:", error);
     res.status(500).json({ message: "Error updating order status", error });
