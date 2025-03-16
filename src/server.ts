@@ -7,6 +7,7 @@ import productRoutes from "./routes/productRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import wishlistRoutes from "./routes/wishlistRoutes.js";
 import userRoutes from "./routes/userRoutes";
 import { notFound } from "./controllers/notFoundController";
 import { Request, Response } from "express";
@@ -62,6 +63,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/users", userRoutes);
 app.get("/", (req: Request, res: Response) => {
   res.send("🚀 API is running!");
