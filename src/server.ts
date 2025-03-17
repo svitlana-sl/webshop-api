@@ -32,6 +32,10 @@ const swaggerOptions = {
         url: "http://localhost:3000",
         description: "Local development server",
       },
+      {
+        url: "https://webshop-api-wc6u.onrender.com",
+        description: "Production server (Render)",
+      },
     ],
     components: {
       securitySchemes: {
