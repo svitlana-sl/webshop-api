@@ -94,7 +94,7 @@ export const removeFromCart = async (
 ): Promise<void> => {
   try {
     const userId = req.user?.userId;
-    const { productId, variantId } = req.body;
+    const { productId, variantId } = req.params;
 
     if (!productId || !variantId) {
       res.status(400).json({ message: "Product ID and variant ID required." });

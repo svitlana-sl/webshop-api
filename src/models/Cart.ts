@@ -8,7 +8,6 @@ const CartSchema = new mongoose.Schema(
       required: false, // Guest cart without userId
     },
     items: [
-      // renamed products -> items
       {
         product: {
           type: mongoose.Schema.Types.ObjectId,
@@ -19,7 +18,7 @@ const CartSchema = new mongoose.Schema(
         quantity: { type: Number, default: 1 },
       },
     ],
-    total: { type: Number, default: 0 }, // renamed 'products' -> 'items', 'total' added
+    total: { type: Number, default: 0 }, // Total price
   },
   { timestamps: true }
 );
