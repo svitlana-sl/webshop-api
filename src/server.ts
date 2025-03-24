@@ -13,18 +13,24 @@ import { notFound } from "./controllers/notFoundController";
 import { Request, Response } from "express";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
-import path from "path";
-import ejs from "ejs";
+import path, { dirname } from "path";
+import * as ejs from "ejs";
 import {Product} from "./models/Product"; // import the Product model
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Variables
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 
-// ✨ EJS Setup
+// EJS Setup
+app.engine("ejs", ejs.renderFile);
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views")); // 
+app.set("views", path.join(process.cwd(), "views"));
+
 
 // Swagger Configuration
 const swaggerOptions = {
@@ -85,12 +91,14 @@ app.get("/", (req: Request, res: Response) => {
   res.send("🚀 API is running!");
 });
 
-// ✨ Admin Panel Route (GET)
+// Admin Panel Route (GET)
 app.get("/admin", async (req: Request, res: Response) => {
   try {
     const products = await Product.find();
+    console.log("✔ Products fetched for /admin:", products);
     res.render("admin", { products });
   } catch (error) {
+    console.error("❌ Error rendering admin:", error);
     res.status(500).send("Error loading admin panel");
   }
 });
