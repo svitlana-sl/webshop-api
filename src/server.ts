@@ -13,10 +13,18 @@ import { notFound } from "./controllers/notFoundController";
 import { Request, Response } from "express";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
+import path from "path";
+import ejs from "ejs";
+import {Product} from "./models/Product"; // import the Product model
+
 // Variables
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
+
+// ✨ EJS Setup
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views")); // 
 
 // Swagger Configuration
 const swaggerOptions = {
@@ -56,22 +64,48 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
 // Middleware
 app.use(cors());
 app.use(express.json());
-// Swagger
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); //serve swagger UI
 
-// Routes
+// Swagger UI
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// API Routes
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/users", userRoutes);
+
+// Root route
 app.get("/", (req: Request, res: Response) => {
   res.send("🚀 API is running!");
 });
+
+// ✨ Admin Panel Route (GET)
+app.get("/admin", async (req: Request, res: Response) => {
+  try {
+    const products = await Product.find();
+    res.render("admin", { products });
+  } catch (error) {
+    res.status(500).send("Error loading admin panel");
+  }
+});
+
+// ✨ Admin Product Deletion (POST)
+app.post("/admin/delete/:id", async (req: Request, res: Response) => {
+  try {
+    await Product.findByIdAndDelete(req.params.id);
+    res.redirect("/admin");
+  } catch (error) {
+    res.status(500).send("Failed to delete product");
+  }
+});
+
+// Not found handler
 app.all("*", notFound);
 
 // Database connection
