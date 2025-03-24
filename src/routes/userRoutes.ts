@@ -1,9 +1,15 @@
 import express from "express";
-import { registerUser, loginUser, getUsers, deleteUser } from "../controllers/userController";
-import { isAuthenticated , isAdmin } from "../middleware/authMiddleware";
+import {
+  registerUser,
+  loginUser,
+  getUsers,
+  deleteUser,
+} from "../controllers/userController";
+import { isAuthenticated, isAdmin } from "../middleware/authMiddleware";
+import { registerValidator, loginValidator } from "../validators/authValidator";
+import { validateRequest } from "../middleware/validateRequest";
 
 const router = express.Router();
-
 
 /**
  * @swagger
@@ -28,32 +34,32 @@ const router = express.Router();
  *               - email
  *               - password
  *             properties:
- *               firstName:
- *                 type: string
- *                 example: Alice
- *               lastName:
- *                 type: string
- *                 example: Johnson
  *               email:
  *                 type: string
  *                 example: alice@example.com
  *               password:
  *                 type: string
  *                 example: securepassword
+ *               firstName:
+ *                 type: string
+ *                 example: Alice
+ *               lastName:
+ *                 type: string
+ *                 example: Johnson
  *               phone:
  *                 type: string
  *                 example: "1234567890"
  *               role:
  *                 type: string
- *                 example: "customer"
+ *                 example: customer
  *     responses:
  *       201:
  *         description: User registered successfully
  *       400:
- *         description: Email already registered
+ *         description: Validation error or email already registered
  */
-// Route for user registration
-router.post("/register", registerUser);
+// Route for user registration with validation
+router.post("/register", registerValidator, validateRequest, registerUser);
 
 /**
  * @swagger
@@ -80,11 +86,13 @@ router.post("/register", registerUser);
  *     responses:
  *       200:
  *         description: Login successful, returns JWT token
+ *       400:
+ *         description: Validation error
  *       401:
  *         description: Invalid credentials
  */
-// Route for user login
-router.post("/login", loginUser);
+// Route for user login with validation
+router.post("/login", loginValidator, validateRequest, loginUser);
 
 /**
  * @swagger
@@ -100,7 +108,6 @@ router.post("/login", loginUser);
  *       403:
  *         description: Forbidden, requires admin role
  */
-// Route to fetch all users (Requires authentication)
 router.get("/", isAuthenticated, isAdmin, getUsers);
 
 /**
@@ -126,8 +133,6 @@ router.get("/", isAuthenticated, isAdmin, getUsers);
  *       404:
  *         description: User not found
  */
-// Route to delete a user by ID (Requires authentication)
 router.delete("/:id", isAuthenticated, isAdmin, deleteUser);
 
 export default router;
-
