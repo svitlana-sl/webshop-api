@@ -15,6 +15,7 @@ import swaggerJsdoc from "swagger-jsdoc";
 import path, { dirname } from "path";
 import * as ejs from "ejs";
 import { Product } from "./models/Product"; // Import the Product model
+import { Category } from "./models/Category"; // Import the Category model
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 
@@ -80,13 +81,16 @@ app.get("/", (req: Request, res: Response) => {
 // Admin Panel Route (GET)
 app.get("/admin", async (req: Request, res: Response) => {
   try {
-    const products = await Product.find();
-    res.render("admin", { products });
+    const products = await Product.find().populate('category');
+    const categories = await Category.find();  
+    res.render("admin", { products, categories });  
   } catch (error) {
     console.error("❌ Error rendering admin:", error);
     res.status(500).send("Error loading admin panel");
   }
 });
+
+
 
 // Admin Product Deletion (POST)
 app.post("/admin/delete/:id", async (req: Request, res: Response) => {
