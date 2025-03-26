@@ -1,7 +1,6 @@
 import "dotenv/config";
 import cors from "cors";
-import express from "express";
-import type { Request, Response } from "express"; // Import Request and Response types separately
+import express, { Request, Response } from "express";
 import mongoose from "mongoose";
 import productRoutes from "./routes/productRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
@@ -14,15 +13,14 @@ import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import path, { dirname } from "path";
 import * as ejs from "ejs";
-import { Product } from "./models/Product"; // Import the Product model
-import { Category } from "./models/Category"; // Import the Category model
+import { Product } from "./models/Product";
+import { Category } from "./models/Category";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Variables
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
@@ -30,9 +28,9 @@ const MONGO_URI = process.env.MONGO_URI;
 // EJS Setup
 app.engine("ejs", ejs.renderFile);
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "../views")); // Correct path for views
+app.set("views", path.join(__dirname, "../views"));
 
-// Swagger Configuration
+// Swagger Configuration (Updated)
 const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
@@ -41,6 +39,21 @@ const swaggerOptions = {
       version: "1.0.0",
       description: "API documentation for the Webshop project",
     },
+    // Added securitySchemes and global security requirement
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
     servers: [
       {
         url: "http://localhost:3000",
@@ -81,16 +94,14 @@ app.get("/", (req: Request, res: Response) => {
 // Admin Panel Route (GET)
 app.get("/admin", async (req: Request, res: Response) => {
   try {
-    const products = await Product.find().populate('category');
-    const categories = await Category.find();  
-    res.render("admin", { products, categories });  
+    const products = await Product.find().populate("category");
+    const categories = await Category.find();
+    res.render("admin", { products, categories });
   } catch (error) {
     console.error("❌ Error rendering admin:", error);
     res.status(500).send("Error loading admin panel");
   }
 });
-
-
 
 // Admin Product Deletion (POST)
 app.post("/admin/delete/:id", async (req: Request, res: Response) => {
