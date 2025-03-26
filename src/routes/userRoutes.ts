@@ -8,6 +8,11 @@ import {
 import { isAuthenticated, isAdmin } from "../middleware/authMiddleware";
 import { registerValidator, loginValidator } from "../validators/authValidator";
 import { validateRequest } from "../middleware/validateRequest";
+import multer from "multer";
+import {v2 as cloudinary} from "cloudinary";
+import { User } from "../models/User"; 
+import fs from "fs";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 const router = express.Router();
 
@@ -134,5 +139,101 @@ router.get("/", isAuthenticated, isAdmin, getUsers);
  *         description: User not found
  */
 router.delete("/:id", isAuthenticated, isAdmin, deleteUser);
+
+
+// Настройка Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+  api_key: process.env.CLOUDINARY_API_KEY!,
+  api_secret: process.env.CLOUDINARY_API_SECRET!,
+});
+
+// Настройка CloudinaryStorage для Multer
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => ({
+    folder: "avatars", // Папка в Cloudinary
+    allowed_formats: ["jpg", "jpeg", "png"],
+  }),
+});
+
+const upload = multer({ storage });
+
+/**
+ * @swagger
+ * tags:
+ *   name: Users
+ *   description: API for managing users
+ */
+
+// Route for user registration with validation
+router.post("/register", registerValidator, validateRequest, registerUser);
+
+// Route for user login with validation
+router.post("/login", loginValidator, validateRequest, loginUser);
+
+// Get all users (admin only)
+router.get("/", isAuthenticated, isAdmin, getUsers);
+
+// Delete a user (admin only)
+router.delete("/:id", isAuthenticated, isAdmin, deleteUser);
+
+// Upload avatar
+/**
+ * @swagger
+ * /api/users/upload-avatar/{id}:
+ *   post:
+ *     summary: Upload avatar for a user
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Avatar uploaded successfully
+ *       400:
+ *         description: No file uploaded
+ *       500:
+ *         description: Upload failed
+ */
+router.post("/upload-avatar/:id", upload.single("avatar"), async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    if (!req.file || !req.file.path) {
+      res.status(400).send("No file uploaded.");
+      return;
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { image: req.file.path }, 
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Avatar uploaded successfully!",
+      imageUrl: req.file.path,
+      user,
+    });
+  } catch (err) {
+    console.error("Upload failed:", err);
+    res.status(500).send("Upload failed.");
+  }
+});
 
 export default router;
