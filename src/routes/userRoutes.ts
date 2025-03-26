@@ -12,11 +12,10 @@ import multer from "multer";
 import {v2 as cloudinary} from "cloudinary";
 import { User } from "../models/User"; 
 import fs from "fs";
-
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 const router = express.Router();
 
-const upload = multer({ dest: "uploads/" });
 /**
  * @swagger
  * tags:
@@ -141,6 +140,45 @@ router.get("/", isAuthenticated, isAdmin, getUsers);
  */
 router.delete("/:id", isAuthenticated, isAdmin, deleteUser);
 
+
+// Настройка Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+  api_key: process.env.CLOUDINARY_API_KEY!,
+  api_secret: process.env.CLOUDINARY_API_SECRET!,
+});
+
+// Настройка CloudinaryStorage для Multer
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => ({
+    folder: "avatars", // Папка в Cloudinary
+    allowed_formats: ["jpg", "jpeg", "png"],
+  }),
+});
+
+const upload = multer({ storage });
+
+/**
+ * @swagger
+ * tags:
+ *   name: Users
+ *   description: API for managing users
+ */
+
+// Route for user registration with validation
+router.post("/register", registerValidator, validateRequest, registerUser);
+
+// Route for user login with validation
+router.post("/login", loginValidator, validateRequest, loginUser);
+
+// Get all users (admin only)
+router.get("/", isAuthenticated, isAdmin, getUsers);
+
+// Delete a user (admin only)
+router.delete("/:id", isAuthenticated, isAdmin, deleteUser);
+
+// Upload avatar
 /**
  * @swagger
  * /api/users/upload-avatar/{id}:
@@ -176,26 +214,20 @@ router.post("/upload-avatar/:id", upload.single("avatar"), async (req, res) => {
   try {
     const userId = req.params.id;
 
-    if (!req.file) {
+    if (!req.file || !req.file.path) {
       res.status(400).send("No file uploaded.");
       return;
     }
 
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: "avatars",
-    });
-
-    fs.unlinkSync(req.file.path);
-
     const user = await User.findByIdAndUpdate(
       userId,
-      { image: result.secure_url },
+      { image: req.file.path }, 
       { new: true }
     );
 
-    res.json({
+    res.status(200).json({
       message: "Avatar uploaded successfully!",
-      imageUrl: result.secure_url,
+      imageUrl: req.file.path,
       user,
     });
   } catch (err) {
@@ -203,6 +235,5 @@ router.post("/upload-avatar/:id", upload.single("avatar"), async (req, res) => {
     res.status(500).send("Upload failed.");
   }
 });
-
 
 export default router;
