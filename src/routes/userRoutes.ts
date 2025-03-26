@@ -8,9 +8,15 @@ import {
 import { isAuthenticated, isAdmin } from "../middleware/authMiddleware";
 import { registerValidator, loginValidator } from "../validators/authValidator";
 import { validateRequest } from "../middleware/validateRequest";
+import multer from "multer";
+import {v2 as cloudinary} from "cloudinary";
+import { User } from "../models/User"; 
+import fs from "fs";
+
 
 const router = express.Router();
 
+const upload = multer({ dest: "uploads/" });
 /**
  * @swagger
  * tags:
@@ -134,5 +140,69 @@ router.get("/", isAuthenticated, isAdmin, getUsers);
  *         description: User not found
  */
 router.delete("/:id", isAuthenticated, isAdmin, deleteUser);
+
+/**
+ * @swagger
+ * /api/users/upload-avatar/{id}:
+ *   post:
+ *     summary: Upload avatar for a user
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Avatar uploaded successfully
+ *       400:
+ *         description: No file uploaded
+ *       500:
+ *         description: Upload failed
+ */
+router.post("/upload-avatar/:id", upload.single("avatar"), async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    if (!req.file) {
+      res.status(400).send("No file uploaded.");
+      return;
+    }
+
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "avatars",
+    });
+
+    fs.unlinkSync(req.file.path);
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { image: result.secure_url },
+      { new: true }
+    );
+
+    res.json({
+      message: "Avatar uploaded successfully!",
+      imageUrl: result.secure_url,
+      user,
+    });
+  } catch (err) {
+    console.error("Upload failed:", err);
+    res.status(500).send("Upload failed.");
+  }
+});
+
 
 export default router;
